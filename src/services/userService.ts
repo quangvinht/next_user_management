@@ -22,6 +22,36 @@ export const fetchUsers = async (): Promise<User[]> => {
   }
 };
 
+export const fetchUserById = async (id: string): Promise<User> => {
+  try {
+    const response = await axiosInstance.get<ApiResponse<User>>(
+      `${BASE_URL}/${id}`
+    );
+    //notify("Fetched users successfully", ToastType.SUCCESS);
+    return response.data.data;
+  } catch (error) {
+    notify("Fetched users failed", ToastType.ERROR);
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+
+export const fetchSingleUserByUsername = async (
+  username: string
+): Promise<User> => {
+  try {
+    const response = await axiosInstance.get<ApiResponse<User>>(
+      `${BASE_URL}/username/${username}`
+    );
+    //notify("Fetched users successfully", ToastType.SUCCESS);
+    return response.data.data;
+  } catch (error) {
+    notify("Fetched users failed", ToastType.ERROR);
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+
 // Tìm kiếm người dùng theo username
 export const fetchUserByUsername = async (
   username: string | undefined

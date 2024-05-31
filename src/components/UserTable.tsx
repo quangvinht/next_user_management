@@ -146,14 +146,12 @@ const UserTable = ({ users }: { users: User[] | undefined }) => {
   const handleViewUser = (user: User) => {
     router.push({
       pathname: `/users/${user.username}`,
-      query: { user: JSON.stringify(user) },
     });
   };
 
   const handleEditUser = (user: User) => {
     router.push({
       pathname: `/users/edit/${user.username}`,
-      query: { user: JSON.stringify(user) },
     });
   };
 

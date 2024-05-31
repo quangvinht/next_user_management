@@ -1,6 +1,8 @@
 import {
   createUserApi,
   deleteUserApi,
+  fetchSingleUserByUsername,
+  fetchUserById,
   fetchUserByUsername,
   fetchUsers,
   updateUserApi,
@@ -16,13 +18,30 @@ export const useUsers = () => {
   });
 };
 
+export const useGetUserById = (id: string) => {
+  return useQuery<User>({
+    queryKey: ["users", id],
+    queryFn: async () => await fetchUserById(id),
+  });
+};
+
+export const useGetUserByUsername = (username: string) => {
+  return useQuery<User>({
+    queryKey: ["users", username],
+    queryFn: async () => await fetchSingleUserByUsername(username),
+  });
+};
+
 // Hook tìm kiếm người dùng theo username
-export const useSearchUser = (username: string , initialData: User[] | null = null) => {
- return useQuery<User[]>({
-    queryKey: ['searchUsers', username],
-    queryFn: async() =>[ await fetchUserByUsername(username)],
-   enabled: !!username,
-   initialData : initialData || [],
+export const useSearchUser = (
+  username: string,
+  initialData: User[] | null = null
+) => {
+  return useQuery<User[]>({
+    queryKey: ["searchUsers", username],
+    queryFn: async () => [await fetchUserByUsername(username)],
+    enabled: !!username,
+    initialData: initialData || [],
   });
 };
 
@@ -32,7 +51,8 @@ export const useCreateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (createUserDto: CreateUserDto) => await createUserApi(createUserDto),
+    mutationFn: async (createUserDto: CreateUserDto) =>
+      await createUserApi(createUserDto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
@@ -40,13 +60,14 @@ export const useCreateUser = () => {
 };
 
 // Hook cập nhật người dùng
-export const useUpdateUser = (
-
-) => {
+export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { username: string; updateUserDto: UpdateUserDto }) => await  updateUserApi(data.username, data.updateUserDto),
+    mutationFn: async (data: {
+      username: string;
+      updateUserDto: UpdateUserDto;
+    }) => await updateUserApi(data.username, data.updateUserDto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },

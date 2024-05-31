@@ -1,34 +1,55 @@
-import { useUpdateUser } from "@/hooks/userHook";
+import { useGetUserByUsername, useUpdateUser } from "@/hooks/userHook";
+import { fetchSingleUserByUsername } from "@/services/userService";
 import { UpdateUserDto, User } from "@/types/user";
+import { QueryClient, dehydrate } from "@tanstack/react-query";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { user } = context.query;
+  const { username } = context.query;
 
-  let userData: User | null = null;
-  userData = JSON.parse(user as string);
+  const queryClient = new QueryClient();
+
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: ["users", username as string],
+      queryFn: async () => await fetchSingleUserByUsername(username as string),
+    });
+  } catch (error) {
+    console.error("Error prefetching users:", error);
+  }
 
   return {
     props: {
-      user: userData,
+      dehydratedState: dehydrate(queryClient),
     },
   };
 };
 
-export default function EditUserPage({ user }: { user: User }) {
-  const originalUsername = user.username;
+export default function EditUserPage() {
   const router = useRouter();
+
+  const { username } = router.query;
+  const { data: user } = useGetUserByUsername(username as string);
+
+  const originalUsername = user?.username;
+
   const updateUser = useUpdateUser();
 
   const [formData, setFormData] = useState<UpdateUserDto>({
-    username: user.username,
-    fullname: user.fullname,
-    role: user.role,
-    project: user.project ?? [],
-    activeYn: user.activeYn,
+    username: "",
+    fullname: "",
+    role: "",
+    project: [],
+    activeYn: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData(user);
+    }
+  }, [user]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -52,7 +73,7 @@ export default function EditUserPage({ user }: { user: User }) {
     e.preventDefault();
     try {
       await updateUser.mutateAsync({
-        username: user.username,
+        username: (user && user.username) || "",
         updateUserDto:
           formData.username === originalUsername
             ? {
